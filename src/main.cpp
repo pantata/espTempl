@@ -43,6 +43,7 @@
 
 #include <NTPClient.h>
 
+#include "configuration.h"
 #include "webserver.h"
 #include "config.h"
 #include "common.h"
@@ -195,34 +196,18 @@ void onStationConnected(const WiFiEventSoftAPModeStationConnected &evt)
 /*
  *  Test, zda je vifi v rezimu STA
  *  a pokud ano, zda je pripojena
- *  Pokud neni, pokusi se pripojit.
+ *  Pokud neni, pokusi se pripojit nebo pustit AP
  */
-#define WIFI_RECONNECT_TIME 600000UL //jak casto se budeme pokouset pripojit
-#define WIFI_RECONNECT_ATTTEMPT 5	//max pocet pokusu, nez prejde do rezimu AP
 void testWifiConnection()
 {
-	static uint32_t lastAttempt = 0;
-	static int numAttempt = 0;
 	TRACE(TRACE_INFO, F("Test WIFI"));
 
 	if (WiFi.getMode() != WIFI_STA)
 		return;
 
-	if ((config.wifimode == WIFI_STA) && (millis() - lastAttempt > WIFI_RECONNECT_TIME) && (WiFi.status() != WL_CONNECTED))
+	if ((config.wifimode == WIFI_STA) && (WiFi.status() != WL_CONNECTED))
 	{
-		lastAttempt = millis();
-		if (numAttempt < WIFI_RECONNECT_ATTTEMPT)
-		{
-			TRACE(TRACE_ERROR, F("Attempt WIFI reconnect"));
-			numAttempt++;
-			WiFi.reconnect();
-		}
-		else
-		{
-			TRACE(TRACE_ERROR, F("WIFI failover"));
-			numAttempt = 0;
-			wifiFailover();
-		}
+		changed = ch_WIFI;
 	}
 }
 
@@ -399,7 +384,6 @@ void setup()
 
 	WiFi.persistent(false);
 	WiFi.setAutoConnect(false);
-	WiFi.setAutoReconnect(false);
 
 	TRACE_INIT;
 
@@ -446,7 +430,7 @@ void setup()
 	wifiConnect();
 
 	//hlidac wifi spojeni
-	wifi_test_ticker.attach(300, testWifiConnection);
+	wifi_test_ticker.attach(WIFI_TEST_TIMEOUT, testWifiConnection);
 
 	//spustime web server
 	webserver_begin();
@@ -511,8 +495,9 @@ void loop()
 		break;
 	case ch_TIME_CONFIG:
 		ntpClient.setPoolServerName(config.ntpServer.c_str());
+		ntpSync = config.useNtp;
 		saveConfig();
-		changed = ch_NONE;
+		changed = ch_TIME;
 		break;
 	case ch_WIFI:
 		if (wifiConnect(true))

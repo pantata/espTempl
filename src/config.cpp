@@ -11,11 +11,16 @@
 #include <FS.h>
 #include <ESP8266WiFi.h>
 #include <MD5.h>
+#include "configuration.h"
 #include "config.h"
 #include "trace.h"
 
 Config config;
 String md5Config;
+
+bool isEmptyString(String s) {
+    return s.length() == 0?true:false;
+}
 
 /*
  * nasteni konfigurace ze souboru
@@ -149,7 +154,7 @@ bool loadConfig() {
 
 /*
  * Kontrola hodnot nactenych z konf. souboru
- * (napr. po riucni editaci), nastaveni mezi, konstant atd 
+ * (napr. po rucni editaci ), nastaveni mezi, konstant atd 
  */ 
 void normalizeConfig(void) {
 	 //zakladni konfigurace
@@ -161,7 +166,6 @@ void normalizeConfig(void) {
 		config.wifimode = WIFI_AP;
 		config.useNtp = false;
 	}
-
 	if (config.wifimode == 0)
 		config.wifimode = WIFI_AP;
 	if (config.appwd.length() == 0)

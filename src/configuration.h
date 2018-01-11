@@ -39,6 +39,7 @@
 
 //nastaveni parametru wifi
 #define WAIT_FOR_WIFI      10000 //cekaci doba na pripojeni wifi (ms)
+#define WIFI_TEST_TIMEOUT  300   //sec
 
 /*
  * Uzivatelske konstanty

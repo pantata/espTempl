@@ -24,12 +24,15 @@ AsyncWebServer server(HTTP_PORT);
 AsyncWebSocket ws("/trc");
 #endif
 
-class CaptiveRequestHandler: public AsyncWebHandler {
-public:
-	CaptiveRequestHandler() {
+class CaptiveRequestHandler : public AsyncWebHandler
+{
+  public:
+	CaptiveRequestHandler()
+	{
 	}
 
-	bool canHandle(AsyncWebServerRequest *request) {		
+	bool canHandle(AsyncWebServerRequest *request)
+	{
 		// redirect if not in wifi client mode (through filter)
 		// and request for different host (due to DNS * response)
 		if (request->host() != WiFi.softAPIP().toString())
@@ -38,8 +41,9 @@ public:
 			return false;
 	}
 
-	void handleRequest(AsyncWebServerRequest *request) {
-		TRACE(TRACE_INFO,"Captive portal - host:%s",(request->host()).c_str());
+	void handleRequest(AsyncWebServerRequest *request)
+	{
+		TRACE(TRACE_INFO, "Captive portal - host:%s", (request->host()).c_str());
 		String location = "http://" + WiFi.softAPIP().toString();
 		if (request->host() == config.hostname + ".local")
 			location += request->url();
@@ -47,7 +51,6 @@ public:
 		request->redirect(location);
 	}
 };
-
 
 void sendJsonResultResponse(AsyncWebServerRequest *request, bool cond,
 							String okResultText, String errorResultText, uint32_t processedTime)
@@ -354,7 +357,7 @@ void webserver_begin()
 		root["mac"] = WiFi.macAddress();
 		root["psk"] = WiFi.psk();
 		root["bssid"] = WiFi.BSSIDstr();
-		root["host"] = WiFi.getMode() ==  WIFI_STA?WiFi.hostname():config.hostname;
+		root["host"] = WiFi.getMode() == WIFI_STA ? WiFi.hostname() : config.hostname;
 		response->setLength();
 		request->send(response);
 	});
@@ -389,96 +392,197 @@ void webserver_begin()
 
 	server.on("/wificonnect.cgi", HTTP_POST,
 			  [](AsyncWebServerRequest *request) {
-				  TRACE(TRACE_DEBUG,"%s",request->arg("apmode").c_str());
+				  TRACE(TRACE_DEBUG, "%s", request->arg("apmode").c_str());
 				  config.wifimode = atoi(request->arg("apmode").c_str());
 
 				  if (config.wifimode == WIFI_AP)
 				  {
-					  if ((request->arg("apname").length())!=0 ) {
-						   request->arg("apname");
-					  } else {
+					  if ((request->arg("apname").length()) != 0)
+					  {
+						  request->arg("apname");
+					  }
+					  else
+					  {
 						  config.hostname = HOSTNAME;
 					  }
 
-					  if ((request->arg("appwd").length())!=0 ) {
-						config.appwd = request->arg("appwd");
-					  } else {
-						config.appwd = AP_PWD;
+					  if ((request->arg("appwd").length()) != 0)
+					  {
+						  config.appwd = request->arg("appwd");
 					  }
-					  
-					  if ((request->arg("apchannel").length())!=0 ) {
+					  else
+					  {
+						  config.appwd = AP_PWD;
+					  }
+
+					  if ((request->arg("apchannel").length()) != 0)
+					  {
 						  config.apchannel = atoi(request->arg("apchannel").c_str());
 					  }
 
-					  if ((request->arg("apip").length())!=0 ) {
-						config.apip = request->arg("apip");
-					  }	else {
-						 config.apip = AP_IP;
+					  if ((request->arg("apip").length()) != 0)
+					  {
+						  config.apip = request->arg("apip");
+					  }
+					  else
+					  {
+						  config.apip = AP_IP;
 					  }
 
-					  if ((request->arg("apgw").length())!=0 ) {
-						config.apgw = request->arg("apgw");
-					  }	else {
+					  if ((request->arg("apgw").length()) != 0)
+					  {
+						  config.apgw = request->arg("apgw");
+					  }
+					  else
+					  {
 						  config.apgw = AP_IP;
 					  }
 
-					  if ((request->arg("apmask").length())!=0 ) {
-						config.apmask = request->arg("apmask");
-					  }	else {
-						config.apmask = "255.255.255.0";
+					  if ((request->arg("apmask").length()) != 0)
+					  {
+						  config.apmask = request->arg("apmask");
+					  }
+					  else
+					  {
+						  config.apmask = "255.255.255.0";
 					  }
 					  saveConfig();
 				  }
 
 				  if (config.wifimode == WIFI_STA)
 				  {
-					  if ((request->arg("ssid").length())!=0 ) {
-						config.ssid = request->arg("ssid");
-					  }		
-					  config.pwd = request->arg("pwd");					  
+					  if ((request->arg("ssid").length()) != 0)
+					  {
+						  config.ssid = request->arg("ssid");
+					  }
+					  config.pwd = request->arg("pwd");
 					  config.wifidhcp = String(request->arg("dhcponoff")).equals("1");
-					  
+
 					  if (!config.wifidhcp)
 					  {
-					  	if ((request->arg("ip").length())!=0 ) {
-							config.wifiip = request->arg("ip");
-					  	} else {
-							config.wifidhcp = true;  
-						}
+						  if ((request->arg("ip").length()) != 0)
+						  {
+							  config.wifiip = request->arg("ip");
+						  }
+						  else
+						  {
+							  config.wifidhcp = true;
+						  }
 
-					  	if ((request->arg("wifimask").length())!=0 ) {
-							config.wifimask = request->arg("wifimask");
-					  	} else {
-							config.wifimask = "255.255.255.0";  
-						}								  
+						  if ((request->arg("wifimask").length()) != 0)
+						  {
+							  config.wifimask = request->arg("wifimask");
+						  }
+						  else
+						  {
+							  config.wifimask = "255.255.255.0";
+						  }
 
-						config.wifigw = request->arg("wifigw");
+						  config.wifigw = request->arg("wifigw");
 
-						config.wifidns1 = request->arg("dns1");
-						config.wifidns2 = request->arg("dns2");
+						  config.wifidns1 = request->arg("dns1");
+						  config.wifidns2 = request->arg("dns2");
 					  }
 				  }
 
 				  AsyncJsonResponse *response = new AsyncJsonResponse();
 				  JsonObject &root = response->getRoot();
-				  if ( config.wifimode == WIFI_AP ) {
-					root["url"] = String("http://") + config.apip;
-				  } else {
-					root["url"] = String("http://") + config.hostname + String(".local");
-				  }				
+				  if (config.wifimode == WIFI_AP)
+				  {
+					  root["url"] = String("http://") + config.apip;
+				  }
+				  else
+				  {
+					  root["url"] = String("http://") + config.hostname + String(".local");
+				  }
 				  response->setLength();
-				  request->send(response);	
-				  changed = config.wifimode == WIFI_AP?ch_RESET:ch_WIFI;
+				  request->send(response);
+				  changed = config.wifimode == WIFI_AP ? ch_RESET : ch_WIFI;
 			  });
 
 	server.on("/settime.cgi", HTTP_POST, [](AsyncWebServerRequest *request) {
-		//setTimeCgi(request);
-		//changed = ch_TIME;
+		String useNtp = request->arg("use-ntp");
+		String ntpip = request->arg("ntpip");
+		String useDST = request->arg("use-dst");
+		String dstStartMonth = request->arg("dstStartMonth");
+		String dstStartDay = request->arg("dstStartDay");
+		String dstStartWeek = request->arg("dstStartWeek");
+		String dstStartOffset = request->arg("dstStartOffset");
+		String dstEndMonth = request->arg("dstEndMonth");
+		String dstEndDay = request->arg("dstEndDay");
+		String dstEndWeek = request->arg("dstEndWeek");
+		String dstEndOffset = request->arg("dstEndOffset");
+		String timezone = request->arg("timezone");
+		String yy = request->arg("yy");
+		String mm = request->arg("mm");
+		String dd = request->arg("dd");
+		String hh = request->arg("hh");
+		String mi = request->arg("mi");
+		String dateFormat = request->arg("dateFormat");
+		String timeFormat = request->arg("timeFormat");
+
+		if (useDST.toInt())
+		{
+			config.useDST = true;
+			config.tzRule.dstStart.day = atoi(dstStartDay.c_str());
+			config.tzRule.dstStart.month = atoi(dstStartMonth.c_str());
+			config.tzRule.dstStart.week = atoi(dstStartWeek.c_str());
+			config.tzRule.dstStart.offset = dstOffset[atoi(dstStartOffset.c_str())];
+
+			config.tzRule.dstEnd.day = atoi(dstEndDay.c_str());
+			config.tzRule.dstEnd.month = atoi(dstEndMonth.c_str());
+			config.tzRule.dstEnd.week = atoi(dstEndWeek.c_str());
+			config.tzRule.dstEnd.offset = dstOffset[atoi(dstEndOffset.c_str())];
+		}
+		else
+		{
+			config.tzRule.dstEnd.offset = dstOffset[atoi(timezone.c_str())];
+		}
+
+		if (useNtp.toInt())
+		{
+			config.useNtp = true;
+			config.ntpServer = String(ntpip);
+		}
+		else
+		{
+			config.useNtp = false;
+
+			tmElements_t t;
+			t.Day = atoi(dd.c_str());
+			t.Month = atoi(mm.c_str());
+			t.Year = atoi(yy.c_str() + 2000);
+			t.Hour = atoi(hh.c_str());
+			t.Minute = atoi(mi.c_str());
+			t.Second = 0;
+			time_t tt = makeTime(t);
+			if (config.useDST == true)
+			{
+				Tz tzlocal = Tz(config.tzRule.dstStart, config.tzRule.dstEnd);
+				setTime(tzlocal.toUTC(tt));
+			}
+			else
+			{
+				/* interni cas bezi vzdy v UTC
+				 * takze ziskany cas prevedeme na UTC */
+				setTime(tt - (config.tzRule.dstEnd.offset * 60));
+			}
+		}
+
+		config.tmFormat = atoi(timeFormat.c_str());
+		config.dtFormat = atoi(dateFormat.c_str());
+
+		//kontrola dat, pokud je nejaky udaj prazdny, pak doplnime default
+		normalizeConfig();
+		saveConfig();
+
+		request->send_P(200, "text/html", "OK");
+		changed = ch_TIME_CONFIG;
 	});
 
 	server.on("/setlang.cgi", HTTP_POST, [](AsyncWebServerRequest *request) {
 		setLang(request);
-		//changed = ch_LANG;
+		changed = ch_LANG;
 	});
 
 	server.on("/gettime.cgi", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -502,17 +606,15 @@ void webserver_begin()
 				  request->send(response);
 			  });
 
-
 	TRACE_ADDWEB(&ws);
 
-#ifdef USE_TRACE	
+#ifdef USE_TRACE
 	server.addHandler(&ws);
-#endif	
+#endif
 
-/*
+	/*
  * zde je mozne pridat dalsi obsluhu http requestu
- */ 
-
+ */
 
 	server.begin();
 }

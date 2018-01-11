@@ -52,4 +52,6 @@ class Tz {
         time_t _stdLoc; //dst end time for given/current year, given in local time
 };
 
+extern const int dstOffset[33];
+
 #endif /* tz_h */

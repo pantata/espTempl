@@ -49,4 +49,6 @@ bool loadConfig();
 void normalizeConfig(void);
 bool saveConfig(void);
 
+bool isEmptyString(String s);
+
 #endif /* CONFIG_H_ */
