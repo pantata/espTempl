@@ -71,9 +71,8 @@ Ticker ntp_sync_ticker;
 //funkce pro synchronizaci
 void ntp_sync()
 {
+	TRACE(TRACE_DEBUG,F("NTP sync set"));
 	ntpSync = config.useNtp;
-	//nastav dalsi cas synch.
-	ntp_sync_ticker.once(NTPSYNCINTERVAL, ntp_sync);
 }
 
 //promenna pro docasne ulozeni druhu nastaveni
@@ -176,7 +175,7 @@ void onStaConnected(const WiFiEventStationModeConnected &evt)
 {
 	TRACE(TRACE_DEBUG, F("WiFi connected"));
 	sos_timer(sos_NO_ERR);
-	ntpSync = true;
+	ntpSync = config.useNtp;
 }
 
 //Odpojeni wifi na AP
@@ -361,6 +360,7 @@ bool wifiConnect(bool force)
  */
 time_t getNtpTime()
 {
+	TRACE(TRACE_DEBUG,F("Get NTP"));
 	time_t l = 0;
 	if (ntpClient.forceUpdate())
 	{
@@ -447,8 +447,8 @@ void setup()
 	ntpClient.begin();
 	//a nastavime obsluhu synchronizace casu
 	setSyncProvider(getNtpTime);
-	//zkusime synchronizaci a nastavime dalsi
-	ntp_sync();
+	//nastavime synchronizaci
+	ntp_sync_ticker.attach(NTPSYNCINTERVAL, ntp_sync);
 }
 
 void loop()
